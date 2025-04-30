@@ -6,6 +6,7 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
+    "build-gp": " ng build --output-path docs --base-href /Flower",
     "test": "ng test"
   },
   "private": true,
@@ -31,6 +32,7 @@
     "@angular/compiler-cli": "^14.2.0",
     "@types/jasmine": "~4.0.0",
     "@types/node": "^16.18.126",
+    "http-server": "^14.1.1",
     "jasmine-core": "~4.3.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.1.0",
