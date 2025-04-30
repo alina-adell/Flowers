@@ -1,0 +1,25 @@
+<section class="favorite">
+    <div class="container">
+        <h2 class="favorite-title">Избранное</h2>
+        <div class="favorite-empty" *ngIf="!products || (products && products.length === 0)">
+            <p>В избранном нет товаров</p>
+            <button class="button" routerLink="/catalog">В каталог</button>
+        </div>
+        <div class="favorite-products" *ngIf="products && products.length > 0">
+            <div class="favorite-product" *ngFor="let product of products">
+                <div class="favorite-product-image" style="background-image: url({{serverStaticPath + product.image}})"></div>
+                <p class="favorite-product-name">{{ product.name }}</p>
+                <p class="favorite-product-price">{{ product.price }} BYN</p>
+                <div class="favorite-product-action">
+                    <button class="button" routerLink="/product/{{product.url}}">Открыть</button>
+                </div>
+                <div class="favorite-product-remove" (click)="removeFromFavorites(product.id)">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="1.93562" y1="2.6499" x2="13.9564" y2="14.6707" stroke="#A8ABA7" stroke-linecap="round"/>
+                        <line x1="13.9238" y1="2.62996" x2="1.90301" y2="14.6508" stroke="#A8ABA7" stroke-linecap="round"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
