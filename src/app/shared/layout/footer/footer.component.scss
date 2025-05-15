@@ -4,6 +4,8 @@ footer.footer {
   padding-top: 39px;
   padding-bottom: 50px;
   background-color: #648F64;
+  flex-shrink: 0; /* Предотвращает сжатие футера */
+  width: 100%;
 
   .container {
     display: flex;

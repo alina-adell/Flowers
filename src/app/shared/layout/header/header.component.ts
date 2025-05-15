@@ -9,7 +9,7 @@ import {ProductService} from "../../services/product.service";
 import {ProductType} from "../../../../types/product.type";
 import {environment} from "../../../../environments/environment";
 import {FormControl} from "@angular/forms";
-import {debounceTime} from "rxjs";
+import {debounceTime, Subscription} from "rxjs";
 
 @Component({
   selector: 'app-header',
@@ -28,6 +28,10 @@ export class HeaderComponent implements OnInit {
   //Флаг для отслеживания взаимодействия с инпутом поиска
   showedSearch: boolean = false;
   searchField = new FormControl();
+  // Подписка на событие изменения статуса логина
+  private authSubscription: Subscription | null = null;
+  // Подписка на событие изменения количества товаров в корзине
+  private cartCountSubscription: Subscription | null = null;
 
   constructor(private authService: AuthService,
               private _snackBar: MatSnackBar,
@@ -55,23 +59,28 @@ export class HeaderComponent implements OnInit {
         }
       });
 
-    this.authService.isLogged$.subscribe((isLoggedIn: boolean) => {
+    this.authSubscription = this.authService.isLogged$.subscribe((isLoggedIn: boolean) => {
       this.isLogged = isLoggedIn;
-    })
+      this.updateCartCountOnAuthChange();
+    });
 
-    this.cartService.getCartCount()
-      .subscribe((data: {count: number} | DefaultResponseType) => {
-        if ((data as DefaultResponseType).error !== undefined) {
-          throw new Error((data as DefaultResponseType).message);
-        }
-        this.count = (data as {count: number}).count;
-      });
+    this.cartCountSubscription = this.cartService.count$
+        .subscribe(count => {
+          this.count = count;
+        });
 
-    this.cartService.count$
-      .subscribe(count => {
-        this.count = count;
-      })
+    this.updateCartCountOnInit();
   }
+
+  ngOnDestroy(): void {
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
+    if (this.cartCountSubscription) {
+      this.cartCountSubscription.unsubscribe();
+    }
+  }
+
 
   logout(): void {
     this.authService.logout()
@@ -89,6 +98,7 @@ export class HeaderComponent implements OnInit {
     this.authService.removeTokens();
     this.authService.userId = null;
     this._snackBar.open('Вы вышли из системы');
+    this.cartService.setCount(0); // Сбрасываем счетчик при выходе
     this.router.navigate(['/']).then();
   }
 
@@ -124,6 +134,13 @@ export class HeaderComponent implements OnInit {
     if (this.showedSearch && (event.target as HTMLInputElement).className.indexOf('search-product') === -1) {
       this.showedSearch = false;
     }
+  }
+  private updateCartCountOnInit(): void {
+    this.cartService.getCartCount().subscribe();
+  }
+
+  private updateCartCountOnAuthChange(): void {
+    this.cartService.getCartCount().subscribe();
   }
 
 }

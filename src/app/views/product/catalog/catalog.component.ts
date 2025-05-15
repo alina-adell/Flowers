@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
 import {ProductService} from "../../../shared/services/product.service";
 import {ProductType} from "../../../../types/product.type";
 import {CategoryService} from "../../../shared/services/category.service";
@@ -36,6 +36,11 @@ export class CatalogComponent implements OnInit {
     pages: number[] = [];
     cart: CartType | null = null;
     favoriteProducts: FavoriteType[] | null = null;
+    nextPageByDefault = 2;
+
+    // Получаем доступ к элементу сортировки через ViewChild
+    @ViewChild('catalogSorting') catalogSorting!: ElementRef;
+
 
     constructor(private productService: ProductService,
                 private categoryService: CategoryService,
@@ -43,7 +48,8 @@ export class CatalogComponent implements OnInit {
                 private cartService: CartService,
                 private authService: AuthService,
                 private favoriteService: FavoriteService,
-                private router: Router) {
+                private router: Router,
+                private elementRef: ElementRef) {
 
     }
 
@@ -190,22 +196,26 @@ export class CatalogComponent implements OnInit {
         this.sortingOpen = !this.sortingOpen;
     }
 
-    sort(value: string) {
+    sort(value: string,  event: Event) {
+        event.stopPropagation();
         this.activeParams.sort = value;
         this.router.navigate(['/catalog'], {
             queryParams: this.activeParams
         });
+        this.sortingOpen = false;
 
     }
 
-    openPage(page: number) {
+    openPage(page: number, event: Event) {
+        event.preventDefault(); // Предотвращаем стандартное поведение ссылки
         this.activeParams.page = page;
         this.router.navigate(['/catalog'], {
             queryParams: this.activeParams
         });
     }
 
-    openPrevPage() {
+    openPrevPage(event: Event) {
+        event.preventDefault(); // Предотвращаем стандартное поведение ссылки
         if (this.activeParams.page && this.activeParams.page > 1) {
             this.activeParams.page--;
             this.router.navigate(['/catalog'], {
@@ -214,14 +224,28 @@ export class CatalogComponent implements OnInit {
         }
     }
 
-    openNextPage() {
-        if (this.activeParams.page && this.activeParams.page < this.pages.length) {
+    openNextPage(event: Event) {
+        event.preventDefault(); // Предотвращаем стандартное поведение ссылки
+        if (!this.activeParams.page) {
+            this.activeParams.page = this.nextPageByDefault;
+            this.router.navigate(['/catalog'], {
+                queryParams: this.activeParams
+            });
+        } else if (this.activeParams.page < this.pages.length) {
             this.activeParams.page++;
             this.router.navigate(['/catalog'], {
                 queryParams: this.activeParams
             });
         }
+    }
 
+
+    @HostListener('document:click', ['$event'])
+    onDocumentClick(event: MouseEvent): void {
+        // Проверяем, открыта ли сортировка и был ли клик сделан за пределами элемента .catalog-sorting
+        if (this.sortingOpen && this.catalogSorting && !this.catalogSorting.nativeElement.contains(event.target)) {
+            this.sortingOpen = false;
+        }
     }
 
 }
